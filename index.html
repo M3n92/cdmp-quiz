@@ -92,7 +92,7 @@
     <script>
         (function() {
             // A comprehensive list of questions from the provided CSV data
-            const allQuestions = [
+            const allQuestionsWithDuplicates = [
                 {
                     question: "Information is:",
                     knowledgeArea: "Data Management",
@@ -3862,6 +3862,8 @@
                     correctAnswer: "A"
                      }
             ];
+
+            const allQuestions = Array.from(new Set(allQuestionsWithDuplicates.map(q => JSON.stringify(q)))).map(q => JSON.parse(q));
 
             let filteredQuestions = [];
             let currentQuestionIndex = 0;
