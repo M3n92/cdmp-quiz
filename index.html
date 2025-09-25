@@ -3863,6 +3863,7 @@
                      }
             ];
 
+            // Filter out any duplicate questions to ensure an accurate count.
             const allQuestions = Array.from(new Set(allQuestionsWithDuplicates.map(q => JSON.stringify(q)))).map(q => JSON.parse(q));
 
             let filteredQuestions = [];
@@ -3874,7 +3875,6 @@
             const knowledgeAreaSelectEl = document.getElementById('knowledge-area-select');
             const startBtn = document.getElementById('start-btn');
 
-            const questionTrackerEl = document.getElementById('question-tracker');
             const currentQuestionNumEl = document.getElementById('current-question-num');
             const totalQuestionsNumEl = document.getElementById('total-questions-num');
 
