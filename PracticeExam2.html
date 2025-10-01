@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDMP Practice Exam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .correct-answer {
+            background-color: #d1fae5 !important;
+            border-color: #10b981 !important;
+            color: #10b981 !important;
+        }
+        .wrong-answer {
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            color: #ef4444 !important;
+        }
+        .wrong-answer.correct-indicator {
+            background-color: #d1fae5 !important;
+            border-color: #10b981 !important;
+            color: #10b981 !important;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="main-container" class="bg-white card rounded-2xl w-full max-w-2xl p-6 md:p-10 transition-all duration-300">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">CDMP Practice Exam</h1>
+        
+        <!-- Selection Screen -->
+        <div id="selection-screen" class="space-y-6 text-center">
+            <p class="text-xl text-gray-700">Select a Knowledge Area to start your quiz:</p>
+            <select id="knowledge-area-select" class="w-full md:w-2/3 px-4 py-3 rounded-lg border-2 border-gray-300 focus:outline-none focus:border-blue-500 transition-colors">
+                <option value="all">All Knowledge Areas</option>
+            </select>
+            <button id="start-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-full transition-colors duration-200">
+                Start Quiz
+            </button>
+        </div>
+
+        <!-- Quiz Container -->
+        <div id="quiz-container" class="hidden">
+            <div id="question-tracker" class="text-center text-sm text-gray-500 mb-4 font-medium">
+                <span id="current-question-num"></span> of <span id="total-questions-num"></span>
+            </div>
+
+            <div id="question-area" class="text-lg text-gray-700 mb-6">
+                <div id="question-text" class="font-medium"></div>
+                <div id="knowledge-area" class="text-sm text-gray-500 mt-2"></div>
+            </div>
+            
+            <div id="choices-container" class="space-y-4 mb-6">
+                <!-- Choices will be injected here -->
+            </div>
+
+            <div id="feedback-area" class="text-center mt-4">
+                <p id="feedback-text" class="font-medium"></p>
+            </div>
+
+            <div class="flex justify-center mt-6 space-x-4">
+                <button id="next-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-full transition-colors duration-200 hidden">
+                    Next Question
+                </button>
+                <button id="restart-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-full transition-colors duration-200 hidden">
+                    Restart Quiz
+                </button>
+            </div>
+
+            <div id="score-area" class="text-center mt-8 text-xl font-bold text-gray-800 hidden">
+                <p>You scored <span id="score-text"></span> out of <span id="total-questions"></span></p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Custom message box -->
+    <div id="message-box" class="fixed top-5 left-1/2 -translate-x-1/2 bg-red-500 text-white py-2 px-4 rounded-lg shadow-lg z-50 transition-all duration-300 opacity-0 transform scale-95 pointer-events-none">
+        No questions found for this knowledge area.
+    </div>
+
+    <script>
+        (function() {
+            // A comprehensive list of questions from the provided CSV data
+            const allQuestions = [
+                {
+                    question: "Information is:",
+                    knowledgeArea: "Data Management",
+                    options: [
+                        { text: "Data in context", letter: "A" },
+                        { text: "A management discipline", letter: "B" },
+                        { text: "Always stored in a computer systems", letter: "C" },
+                        { text: "A byproduct of IT systems.", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "Data differs with regards to other assets because",
+                    knowledgeArea: "Data Management",
+                    options: [
+                        { text: "It uses automation", letter: "A" },
+                        { text: "It can be used yet still retain value", letter: "B" },
+                        { text: "It has value", letter: "C" },
+                        { text: "It is big", letter: "D" },
+                        { text: "It is regulated .", letter: "E" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "Which is a valid Environmental component of data management?",
+                    knowledgeArea: "Data Management",
+                    options: [
+                        { text: "Motivation", letter: "A" },
+                        { text: "Hardware Management", letter: "B" },
+                        { text: "Practices & Tecniques", letter: "C" },
+                        { text: "Project Management", letter: "D" },
+                        { text: "Database Management.", letter: "E" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "Which of these is not a Knowledge Area in DMBoK v2?",
+                    knowledgeArea: "Data Management",
+                    options: [
+                        { text: "Data Governance", letter: "A" },
+                        { text: "Master & Reference Data Management", letter: "B" },
+                        { text: "Data Quality Management", letter: "C" },
+                        { text: "Data Security Management", letter: "D" },
+                        { text: "Big Data & Data Science.", letter: "E" }
+                    ],
+                    correctAnswer: "E"
+                },
+                {
+                    question: "According to the DAMA DMBoK, the Data Governance Council (DGC) is the highest-authority organization for Data Governance in an organization. Who should typically chair this Council?",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "The Chief Information Officer (CIO)", letter: "A" },
+                        { text: "Chief Data Steward (Business)/Chief Data Officer", letter: "B" },
+                        { text: "The chair should rotate across Data Owners", letter: "C" },
+                        { text: "The Chief Data Architect", letter: "D" },
+                        { text: "Any executive/c-level participant in the DGC.", letter: "E" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "What are the primary responsibilities of a data steward?",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "A business role appointed to take responsibility for the quality and use of their organization's data assets", letter: "A" },
+                        { text: "Analyzing Data Quality", letter: "B" },
+                        { text: "The manager responsible for writing policies and standards that define the Data Management program for an organization", letter: "C" },
+                        { text: "Identifying data problems and issues", letter: "D" },
+                        { text: "The data owner of a specific database table.", letter: "E" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "What are the core components of the DAMA International Wheel?",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "Practices and techniques, deliverables and outputs, and human components", letter: "A" },
+                        { text: "Goals and principles, organizations, and roles and responsibilities", letter: "B" },
+                        { text: "Data Governance, technology, and people", letter: "C" },
+                        { text: "Processes, artifacts, and roles", letter: "D" },
+                        { text: "Business drivers, goals, and metrics", letter: "E" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "What is an organization’s highest authority on data governance?",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "Steering Committee", letter: "A" },
+                        { text: "Data Governance Council", letter: "B" },
+                        { text: "Data Stewardship Team", letter: "C" },
+                        { text: "Chief Data Officer", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "The Data Governance Council should include which of the following?",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "A broad spectrum of stakeholders, including IT and business leaders", letter: "A" },
+                        { text: "A mix of data stewards and data owners", letter: "B" },
+                        { text: "Only business executives", letter: "C" },
+                        { text: "Only IT executives", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "The business value of implementing a Data Governance program includes:",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "Increased IT costs and greater data access", letter: "A" },
+                        { text: "Reduced business complexity and improved business-IT alignment", letter: "B" },
+                        { text: "Higher operational efficiency and reduced business risk", letter: "C" },
+                        { text: "Improved data security and less regulatory compliance", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "A Data Governance program’s success can be measured by:",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "The number of policies and standards that are created", letter: "A" },
+                        { text: "The amount of budget allocated to the program", letter: "B" },
+                        { text: "Reduced risk, reduced cost, and increased value", letter: "C" },
+                        { text: "The number of Data Management activities that are automated", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "A Data Governance Charter should address which of the following?",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "The mission, scope, and authority of the program", letter: "A" },
+                        { text: "The specific technologies that will be used to implement the program", letter: "B" },
+                        { text: "The data models and schemas that will be used", letter: "C" },
+                        { text: "The Data Management team’s organizational structure", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "A data steward’s role is primarily to:",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "Define data policies and standards for the organization", letter: "A" },
+                        { text: "Manage the database and other technical infrastructure", letter: "B" },
+                        { text: "Act as a liaison between the business and IT for data issues", letter: "C" },
+                        { text: "Develop data warehouses and data marts", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "A Data Governance Policy should be written in which of the following manners?",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "Very detailed, with technical specifications", letter: "A" },
+                        { text: "Clear and concise, with business requirements", letter: "B" },
+                        { text: "Informal, without legal language", letter: "C" },
+                        { text: "As a set of guidelines and best practices", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "An organization's Data Governance program should:",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "Be a one-time project to implement data policies", letter: "A" },
+                        { text: "Be an ongoing, iterative process", letter: "B" },
+                        { text: "Be managed by the IT department", letter: "C" },
+                        { text: "Focus only on operational data", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "What is the primary objective of a Data Governance program?",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "To increase business users' access to data", letter: "A" },
+                        { text: "To reduce data storage costs", letter: "B" },
+                        { text: "To ensure that data is a managed asset", letter: "C" },
+                        { text: "To automate all data management processes", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "Which of these is NOT a principle of Data Governance?",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "Accountability", letter: "A" },
+                        { text: "Transparency", letter: "B" },
+                        { text: "Collaboration", letter: "C" },
+                        { text: "Data centralization", letter: "D" }
+                    ],
+                    correctAnswer: "D"
+                },
+                {
+                    question: "A Data Governance Policy is a:",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "Document that describes the structure of a database", letter: "A" },
+                        { text: "High-level statement of management's intent", letter: "B" },
+                        { text: "Detailed set of steps to perform a task", letter: "C" },
+                        { text: "Report on data quality metrics", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "The role of the Data Governance Council is to:",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "Implement data quality standards and procedures", letter: "A" },
+                        { text: "Manage the data warehouse and business intelligence systems", letter: "B" },
+                        { text: "Provide strategic direction for the Data Governance program", letter: "C" },
+                        { text: "Serve as the first point of contact for data issues", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "A Data Governance program should be aligned with:",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "The IT department’s budget", letter: "A" },
+                        { text: "Business strategy and objectives", letter: "B" },
+                        { text: "Regulatory requirements only", letter: "C" },
+                        { text: "The organization's technology stack", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "The difference between Data Governance and Data Management is:",
+                    knowledgeArea: "Data Management",
+                    options: [
+                        { text: "Data Management provides the 'what' and 'how,' while Data Governance provides the 'why'", letter: "A" },
+                        { text: "Data Governance is tactical, while Data Management is strategic", letter: "B" },
+                        { text: "Data Governance is an IT function, while Data Management is a business function", letter: "C" },
+                        { text: "Data Governance is a subset of Data Management", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "Which of the following describes the Data Management Maturity Model (DMM)?",
+                    knowledgeArea: "Data Management",
+                    options: [
+                        { text: "It is a framework for data governance", letter: "A" },
+                        { text: "It is a model for measuring data quality", letter: "B" },
+                        { text: "It is a way to assess an organization's capabilities in data management", letter: "C" },
+                        { text: "It is a tool for data modeling", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "The DAMA DMBoK provides:",
+                    knowledgeArea: "Data Management",
+                    options: [
+                        { text: "A detailed list of data management best practices", letter: "A" },
+                        { text: "A comprehensive guide to all data technologies", letter: "B" },
+                        { text: "A framework for the practice of data management", letter: "C" },
+                        { text: "A certification program for data professionals", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "Data management is a discipline that:",
+                    knowledgeArea: "Data Management",
+                    options: [
+                        { text: "Focuses on the technical aspects of data storage", letter: "A" },
+                        { text: "Encompasses the development, execution, and supervision of plans, programs, and practices that deliver, control, protect, and enhance the value of data and information assets", letter: "B" },
+                        { text: "Is a synonym for data governance", letter: "C" },
+                        { text: "Is primarily an IT function", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "Which of the following is an objective of data management?",
+                    knowledgeArea: "Data Management",
+                    options: [
+                        { text: "To minimize the value of data assets", letter: "A" },
+                        { text: "To reduce the amount of data stored", letter: "B" },
+                        { text: "To enable the organization to use data to its full potential", letter: "C" },
+                        { text: "To ensure that all data is stored in a single location", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "What is the primary goal of data architecture?",
+                    knowledgeArea: "Data Architecture",
+                    options: [
+                        { text: "To design a single database for the entire organization", letter: "A" },
+                        { text: "To provide a comprehensive blueprint for managing an organization's data assets", letter: "B" },
+                        { text: "To ensure data security and privacy", letter: "C" },
+                        { text: "To develop and implement data quality standards", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "The primary purpose of a conceptual data model is to:",
+                    knowledgeArea: "Data Modeling and Design",
+                    options: [
+                        { text: "Describe the business requirements for data", letter: "A" },
+                        { text: "Show how data is physically stored in a database", letter: "B" },
+                        { text: "Represent the logical structure of a database", letter: "C" },
+                        { text: "Define the data types and sizes for all columns", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "A logical data model:",
+                    knowledgeArea: "Data Modeling and Design",
+                    options: [
+                        { text: "Describes the data from a business perspective, independent of technology", letter: "A" },
+                        { text: "Is a blueprint for how data will be physically stored", letter: "B" },
+                        { text: "Is used to design and build databases", letter: "C" },
+                        { text: "Is a high-level representation of data requirements", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "A physical data model:",
+                    knowledgeArea: "Data Modeling and Design",
+                    options: [
+                        { text: "Represents business concepts and rules", letter: "A" },
+                        { text: "Is used to create a database schema", letter: "B" },
+                        { text: "Describes data from a business perspective", letter: "C" },
+                        { text: "Is a technology-independent representation of data", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "Data lineage refers to:",
+                    knowledgeArea: "Data Integration and Interoperability",
+                    options: [
+                        { text: "The path that data takes from its source to its destination", letter: "A" },
+                        { text: "The process of combining data from multiple sources", letter: "B" },
+                        { text: "The quality of data in a system", letter: "C" },
+                        { text: "The process of extracting data from a source system", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "Which of these is a key component of a data warehouse?",
+                    knowledgeArea: "Data Warehousing and Business Intelligence",
+                    options: [
+                        { text: "Transactional data", letter: "A" },
+                        { text: "OLTP systems", letter: "B" },
+                        { text: "Dimensional modeling", letter: "C" },
+                        { text: "Real-time data", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "The primary purpose of business intelligence is to:",
+                    knowledgeArea: "Data Warehousing and Business Intelligence",
+                    options: [
+                        { text: "Support operational processes", letter: "A" },
+                        { text: "Enable decision-making through data analysis", letter: "B" },
+                        { text: "Store and manage large volumes of data", letter: "C" },
+                        { text: "Ensure data security and privacy", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "Data quality dimensions include:",
+                    knowledgeArea: "Data Quality Management",
+                    options: [
+                        { text: "Accuracy, completeness, consistency, and timeliness", letter: "A" },
+                        { text: "Price, size, and location", letter: "B" },
+                        { text: "Volume, velocity, and variety", letter: "C" },
+                        { text: "Source, destination, and lineage", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "What is the purpose of data profiling?",
+                    knowledgeArea: "Data Quality Management",
+                    options: [
+                        { text: "To identify data quality issues", letter: "A" },
+                        { text: "To cleanse and standardize data", letter: "B" },
+                        { text: "To create a business glossary", letter: "C" },
+                        { text: "To define data governance policies", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "Master data is:",
+                    knowledgeArea: "Master & Reference Data Management",
+                    options: [
+                        { text: "Transactional data from business systems", letter: "A" },
+                        { text: "Data about customers, products, and other business entities", letter: "B" },
+                        { text: "Data that describes other data", letter: "C" },
+                        { text: "Data that is used for business intelligence", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "The primary goal of master data management (MDM) is to:",
+                    knowledgeArea: "Master & Reference Data Management",
+                    options: [
+                        { text: "Create a single source of truth for master data", letter: "A" },
+                        { text: "Store and manage large volumes of data", letter: "B" },
+                        { text: "Ensure data security and privacy", letter: "C" },
+                        { text: "Provide a platform for data analysis", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "Metadata is:",
+                    knowledgeArea: "Metadata Management",
+                    options: [
+                        { text: "Data about data", letter: "A" },
+                        { text: "Master data", letter: "B" },
+                        { text: "Transactional data", letter: "C" },
+                        { text: "Operational data", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "Which of these is a type of technical metadata?",
+                    knowledgeArea: "Metadata Management",
+                    options: [
+                        { text: "Business rules", letter: "A" },
+                        { text: "Data definitions", letter: "B" },
+                        { text: "Table and column names", letter: "C" },
+                        { text: "Data quality metrics", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "Data security management includes:",
+                    knowledgeArea: "Data Security",
+                    options: [
+                        { text: "Confidentiality, integrity, and availability", letter: "A" },
+                        { text: "Data modeling and design", letter: "B" },
+                        { text: "Data profiling and cleansing", letter: "C" },
+                        { text: "Data warehousing and business intelligence", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "What is a key difference between structured and unstructured data?",
+                    knowledgeArea: "Data Storage and Operations",
+                    options: [
+                        { text: "Structured data is always stored in a database, while unstructured data is not", letter: "A" },
+                        { text: "Structured data has a defined format and schema, while unstructured data does not", letter: "B" },
+                        { text: "Structured data is more valuable than unstructured data", letter: "C" },
+                        { text: "Structured data is always more secure than unstructured data", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "The role of the Data Architect is to:",
+                    knowledgeArea: "Data Architecture",
+                    options: [
+                        { text: "Plan, design, and implement data storage solutions.", letter: "A" },
+                        { text: "Create and enforce data security policies.", letter: "B" },
+                        { text: "Provide data analysis reports to business users.", letter: "C" },
+                        { text: "Ensure data quality is maintained across the organization.", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "What is the primary goal of Master Data Management (MDM)?",
+                    knowledgeArea: "Master & Reference Data Management",
+                    options: [
+                        { text: "To eliminate all duplicate data.", letter: "A" },
+                        { text: "To create a single, authoritative source of master data.", letter: "B" },
+                        { text: "To improve data quality through data cleansing.", letter: "C" },
+                        { text: "To manage all data assets in an organization.", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "Which of these is a key component of a Data Quality Management framework?",
+                    knowledgeArea: "Data Quality Management",
+                    options: [
+                        { text: "Data governance council.", letter: "A" },
+                        { text: "Business glossary.", letter: "B" },
+                        { text: "Data profiling.", letter: "C" },
+                        { text: "Data modeling.", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "The requirement to enter a username, a password and then a code sent to an authentication app is called",
+                    knowledgeArea: "Data Security",
+                    options: [
+                        { text: "3-factor", letter: "A" },
+                        { text: "2-factor", letter: "B" },
+                        { text: "biometric authentication", letter: "C" },
+                        { text: "proactive authentication", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "A process of defining an organization’s business processes, data, and applications is known as:",
+                    knowledgeArea: "Data Architecture",
+                    options: [
+                        { text: "Data Modeling", letter: "A" },
+                        { text: "Data Governance", letter: "B" },
+                        { text: "Enterprise Architecture", letter: "C" },
+                        { text: "Data Integration", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "A data model describes:",
+                    knowledgeArea: "Data Modeling and Design",
+                    options: [
+                        { text: "The data storage architecture", letter: "A" },
+                        { text: "The business rules and data requirements", letter: "B" },
+                        { text: "The data quality metrics", letter: "C" },
+                        { text: "The data security policies", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "The primary purpose of a data warehouse is to:",
+                    knowledgeArea: "Data Warehousing and Business Intelligence",
+                    options: [
+                        { text: "Store operational data for daily transactions", letter: "A" },
+                        { text: "Support business intelligence and reporting", letter: "B" },
+                        { text: "Serve as a data backup system", letter: "C" },
+                        { text: "Provide a platform for data entry", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "Which of these is NOT a characteristic of a data warehouse?",
+                    knowledgeArea: "Data Warehousing and Business Intelligence",
+                    options: [
+                        { text: "Subject-oriented", letter: "A" },
+                        { text: "Integrated", letter: "B" },
+                        { text: "Volatile", letter: "C" },
+                        { text: "Time-variant", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "Data quality can be defined as:",
+                    knowledgeArea: "Data Quality Management",
+                    options: [
+                        { text: "The accuracy of data", letter: "A" },
+                        { text: "The fitness of data for its intended use", letter: "B" },
+                        { text: "The completeness of data", letter: "C" },
+                        { text: "The consistency of data", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "What is the purpose of a data governance framework?",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "To define the responsibilities for managing data as an asset", letter: "A" },
+                        { text: "To create data models and schemas", letter: "B" },
+                        { text: "To implement data quality standards", letter: "C" },
+                        { text: "To manage data security policies", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "What is the primary objective of a data governance program?",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "To ensure that data is secure and confidential", letter: "A" },
+                        { text: "To define data security policies and standards", letter: "B" },
+                        { text: "To establish a system for managing data privacy", letter: "C" },
+                        { text: "To ensure that data is a managed asset", letter: "D" }
+                    ],
+                    correctAnswer: "D"
+                },
+                {
+                    question: "Data security management is primarily concerned with:",
+                    knowledgeArea: "Data Security",
+                    options: [
+                        { text: "The accuracy and consistency of data", letter: "A" },
+                        { text: "The confidentiality, integrity, and availability of data", letter: "B" },
+                        { text: "The storage and retrieval of data", letter: "C" },
+                        { text: "The design and implementation of data models", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "The role of a data steward is to:",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "Serve as a technical expert on data management", letter: "A" },
+                        { text: "Act as a business owner for a specific data domain", letter: "B" },
+                        { text: "Manage the data warehouse and business intelligence systems", letter: "C" },
+                        { text: "Define data policies and standards for the organization", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "Which of the following is a key component of a data governance program?",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "A data governance council", letter: "A" },
+                        { text: "A data security team", letter: "B" },
+                        { text: "A data modeling team", letter: "C" },
+                        { text: "A data quality team", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "Data lineage can be used to:",
+                    knowledgeArea: "Data Integration and Interoperability",
+                    options: [
+                        { text: "Trace the origin of data and its movement through systems", letter: "A" },
+                        { text: "Combine data from multiple sources into a single view", letter: "B" },
+                        { text: "Cleanse and standardize data", letter: "C" },
+                        { text: "Design and implement data models", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "The purpose of a master data management (MDM) program is to:",
+                    knowledgeArea: "Master & Reference Data Management",
+                    options: [
+                        { text: "Ensure that all data is stored in a single database", letter: "A" },
+                        { text: "Create a consistent view of key business entities across the organization", letter: "B" },
+                        { text: "Manage the data warehouse and business intelligence systems", letter: "C" },
+                        { text: "Implement data quality standards and procedures", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "Which of these is a characteristic of master data?",
+                    knowledgeArea: "Master & Reference Data Management",
+                    options: [
+                        { text: "Volatile and transactional", letter: "A" },
+                        { text: "Stable and non-volatile", letter: "B" },
+                        { text: "Used for real-time operations", letter: "C" },
+                        { text: "Contains historical data for analysis", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "Metadata management is a discipline that:",
+                    knowledgeArea: "Metadata Management",
+                    options: [
+                        { text: "Focuses on the security of data", letter: "A" },
+                        { text: "Ensures the accuracy and consistency of data", letter: "B" },
+                        { text: "Creates a single source of truth for business data", letter: "C" },
+                        { text: "Provides a framework for managing metadata as a corporate asset", letter: "D" }
+                    ],
+                    correctAnswer: "D"
+                },
+                {
+                    question: "The purpose of data modeling is to:",
+                    knowledgeArea: "Data Modeling and Design",
+                    options: [
+                        { text: "Design a database schema", letter: "A" },
+                        { text: "Represent data requirements and business rules in a visual format", letter: "B" },
+                        { text: "Cleanse and standardize data", letter: "C" },
+                        { text: "Ensure data security and privacy", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "Which of the following is a key activity in data quality management?",
+                    knowledgeArea: "Data Quality Management",
+                    options: [
+                        { text: "Data architecture", letter: "A" },
+                        { text: "Data profiling", letter: "B" },
+                        { text: "Data warehousing", letter: "C" },
+                        { text: "Data security", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "The objective of a data security program is to:",
+                    knowledgeArea: "Data Security",
+                    options: [
+                        { text: "Prevent unauthorized access to data", letter: "A" },
+                        { text: "Ensure the accuracy and consistency of data", letter: "B" },
+                        { text: "Reduce the amount of data stored", letter: "C" },
+                        { text: "Improve data quality", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "Which of these is NOT a data management activity?",
+                    knowledgeArea: "Data Management",
+                    options: [
+                        { text: "Data warehousing", letter: "A" },
+                        { text: "Data governance", letter: "B" },
+                        { text: "Data security", letter: "C" },
+                        { text: "Website design", letter: "D" }
+                    ],
+                    correctAnswer: "D"
+                },
+                {
+                    question: "The primary purpose of a business glossary is to:",
+                    knowledgeArea: "Metadata Management",
+                    options: [
+                        { text: "Define business terms and their relationships", letter: "A" },
+                        { text: "Describe the technical structure of a database", letter: "B" },
+                        { text: "Provide a list of all data quality issues", letter: "C" },
+                        { text: "Serve as a tool for data modeling", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                },
+                {
+                    question: "What is a key difference between a data mart and a data warehouse?",
+                    knowledgeArea: "Data Warehousing and Business Intelligence",
+                    options: [
+                        { text: "A data mart is subject-oriented, while a data warehouse is not", letter: "A" },
+                        { text: "A data mart is a subset of a data warehouse, focused on a specific business unit or subject area", letter: "B" },
+                        { text: "A data mart contains historical data, while a data warehouse does not", letter: "C" },
+                        { text: "A data mart is used for operational reporting, while a data warehouse is used for business intelligence", letter: "D" }
+                    ],
+                    correctAnswer: "B"
+                },
+                {
+                    question: "Data lineage is a key component of:",
+                    knowledgeArea: "Data Integration and Interoperability",
+                    options: [
+                        { text: "Data quality management", letter: "A" },
+                        { text: "Data security", letter: "B" },
+                        { text: "Data governance", letter: "C" },
+                        { text: "Data modeling", letter: "D" }
+                    ],
+                    correctAnswer: "C"
+                },
+                {
+                    question: "What is the primary purpose of a data governance charter?",
+                    knowledgeArea: "Data Governance",
+                    options: [
+                        { text: "To define the scope, authority, and objectives of the data governance program", letter: "A" },
+                        { text: "To describe the data models and schemas", letter: "B" },
+                        { text: "To outline the data security policies", letter: "C" },
+                        { text: "To provide a list of all data quality issues", letter: "D" }
+                    ],
+                    correctAnswer: "A"
+                }
+            ];
+
+            let filteredQuestions = [];
+            let currentQuestionIndex = 0;
+            let score = 0;
+            
+            const selectionScreenEl = document.getElementById('selection-screen');
+            const quizContainerEl = document.getElementById('quiz-container');
+            const knowledgeAreaSelectEl = document.getElementById('knowledge-area-select');
+            const startBtn = document.getElementById('start-btn');
+
+            const questionTrackerEl = document.getElementById('question-tracker');
+            const currentQuestionNumEl = document.getElementById('current-question-num');
+            const totalQuestionsNumEl = document.getElementById('total-questions-num');
+
+            const questionTextEl = document.getElementById('question-text');
+            const knowledgeAreaEl = document.getElementById('knowledge-area');
+            const choicesContainerEl = document.getElementById('choices-container');
+            const feedbackTextEl = document.getElementById('feedback-text');
+            const nextBtn = document.getElementById('next-btn');
+            const restartBtn = document.getElementById('restart-btn');
+            const scoreAreaEl = document.getElementById('score-area');
+            const scoreTextEl = document.getElementById('score-text');
+            const totalQuestionsEl = document.getElementById('total-questions');
+            const messageBoxEl = document.getElementById('message-box');
+
+            function showMessageBox(message, isError = true) {
+                messageBoxEl.textContent = message;
+                messageBoxEl.classList.remove('opacity-0', 'scale-95', 'bg-red-500', 'bg-green-500');
+                messageBoxEl.classList.add('opacity-100', 'scale-100');
+                messageBoxEl.classList.remove('pointer-events-none');
+                
+                if (isError) {
+                    messageBoxEl.classList.add('bg-red-500');
+                } else {
+                    messageBoxEl.classList.add('bg-green-500');
+                }
+
+                setTimeout(() => {
+                    messageBoxEl.classList.remove('opacity-100', 'scale-100');
+                    messageBoxEl.classList.add('opacity-0', 'scale-95');
+                    messageBoxEl.classList.add('pointer-events-none');
+                }, 3000);
+            }
+
+            // Function to populate the knowledge area dropdown
+            function populateKnowledgeAreas() {
+                const uniqueAreas = [...new Set(allQuestions.map(q => q.knowledgeArea))];
+                uniqueAreas.sort().forEach(area => {
+                    const option = document.createElement('option');
+                    option.value = area;
+                    option.textContent = area;
+                    knowledgeAreaSelectEl.appendChild(option);
+                });
+            }
+
+            // Function to load a question
+            function loadQuestion() {
+                // Clear previous state
+                feedbackTextEl.textContent = '';
+                choicesContainerEl.innerHTML = '';
+                nextBtn.classList.add('hidden');
+                
+                if (currentQuestionIndex >= filteredQuestions.length) {
+                    showFinalScore();
+                    return;
+                }
+
+                // Update the question tracker
+                currentQuestionNumEl.textContent = currentQuestionIndex + 1;
+                totalQuestionsNumEl.textContent = filteredQuestions.length;
+
+                const currentQuestion = filteredQuestions[currentQuestionIndex];
+                questionTextEl.textContent = `${currentQuestionIndex + 1}. ${currentQuestion.question}`;
+                knowledgeAreaEl.textContent = `Knowledge Area: ${currentQuestion.knowledgeArea}`;
+                
+                // Shuffle options to prevent rote memorization
+                const shuffledOptions = [...currentQuestion.options].sort(() => Math.random() - 0.5);
+
+                shuffledOptions.forEach(option => {
+                    const button = document.createElement('button');
+                    button.textContent = `${option.letter}. ${option.text}`;
+                    button.dataset.answerLetter = option.letter;
+                    button.className = `w-full text-left py-3 px-4 rounded-xl border-2 border-gray-300 
+                                       bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 
+                                       focus:ring-blue-500 focus:border-blue-500 transition-all duration-200`;
+                    button.addEventListener('click', () => checkAnswer(button, option.letter));
+                    choicesContainerEl.appendChild(button);
+                });
+            }
+
+            // Function to check the selected answer
+            function checkAnswer(selectedButton, selectedLetter) {
+                const currentQuestion = filteredQuestions[currentQuestionIndex];
+                const isCorrect = selectedLetter === currentQuestion.correctAnswer;
+                
+                // Disable all choice buttons
+                document.querySelectorAll('#choices-container button').forEach(button => {
+                    button.disabled = true;
+                });
+                
+                if (isCorrect) {
+                    score++;
+                    selectedButton.classList.remove('bg-white', 'hover:bg-gray-50');
+                    selectedButton.classList.add('correct-answer');
+                    feedbackTextEl.textContent = 'Correct!';
+                    feedbackTextEl.style.color = '#10b981';
+                } else {
+                    selectedButton.classList.remove('bg-white', 'hover:bg-gray-50');
+                    selectedButton.classList.add('wrong-answer');
+                    feedbackTextEl.textContent = 'Incorrect.';
+                    feedbackTextEl.style.color = '#ef4444';
+                    
+                    // Highlight the correct answer
+                    document.querySelectorAll('#choices-container button').forEach(button => {
+                        if (button.dataset.answerLetter === currentQuestion.correctAnswer) {
+                            button.classList.add('correct-answer');
+                        }
+                    });
+                }
+                
+                // Show the next question button
+                nextBtn.classList.remove('hidden');
+            }
+
+            // Function to show the final score
+            function showFinalScore() {
+                document.getElementById('question-area').classList.add('hidden');
+                document.getElementById('choices-container').classList.add('hidden');
+                document.getElementById('feedback-area').classList.add('hidden');
+                nextBtn.classList.add('hidden');
+                
+                scoreAreaEl.classList.remove('hidden');
+                scoreTextEl.textContent = score;
+                totalQuestionsEl.textContent = filteredQuestions.length;
+                
+                restartBtn.classList.remove('hidden');
+            }
+
+            // Event listeners
+            startBtn.addEventListener('click', () => {
+                const selectedArea = knowledgeAreaSelectEl.value;
+                if (selectedArea === 'all') {
+                    filteredQuestions = [...allQuestions];
+                } else {
+                    filteredQuestions = allQuestions.filter(q => q.knowledgeArea === selectedArea);
+                }
+
+                // If no questions found for the selected area, provide feedback.
+                if (filteredQuestions.length === 0) {
+                    showMessageBox('No questions found for this knowledge area. Please select another.');
+                    return;
+                }
+
+                // Shuffle the filtered questions
+                filteredQuestions.sort(() => Math.random() - 0.5);
+
+                currentQuestionIndex = 0;
+                score = 0;
+                selectionScreenEl.classList.add('hidden');
+                quizContainerEl.classList.remove('hidden');
+                loadQuestion();
+            });
+
+            nextBtn.addEventListener('click', () => {
+                currentQuestionIndex++;
+                loadQuestion();
+            });
+
+            restartBtn.addEventListener('click', () => {
+                quizContainerEl.classList.add('hidden');
+                selectionScreenEl.classList.remove('hidden');
+                document.getElementById('question-area').classList.remove('hidden');
+                document.getElementById('choices-container').classList.remove('hidden');
+                document.getElementById('feedback-area').classList.remove('hidden');
+                scoreAreaEl.classList.add('hidden');
+                restartBtn.classList.add('hidden');
+            });
+
+            // Initial setup
+            populateKnowledgeAreas();
+
+        })();
+    </script>
+
+</body>
+</html>
